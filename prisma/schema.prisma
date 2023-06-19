@@ -3,9 +3,72 @@
 
 generator client {
   provider = "prisma-client-js"
+  // previewFeatures = ["orderByAggregateGroup", "selectRelationCount", "referentialActions"]
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  username String  @unique
+  password String
+  image    String?
+  bio      String?
+
+  // Relationships
+  articles          Article[] @relation(name: "userArticles")
+  comments          Comment[]
+  favouriteArticles Article[]
+  followedBy        User[]    @relation("followedByOtherUsers")
+  following         User[]    @relation("followingOtherUsers")
+  // User              User?     @relation(fields: [userId], references: [id])
+  // userId            Int?
+  // User              User?     @relation(fields: [userId], references: [id])
+  // userId            Int?
+  FollowedByUser    User?     @relation(name: "followedByOtherUsers", fields: [followedByUserId], references: [id])
+  followedByUserId  Int?
+  FollowingUser     User?     @relation(name: "followingOtherUsers", fields: [followingUserId], references: [id])
+  followingUserId   Int?
+}
+
+model Article {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  title       String
+  description String
+  body        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  tagList      Tag[]
+  authorId     Int
+  author       User      @relation(name: "userArticles", fields: [authorId], references: [id])
+  comments     Comment[]
+  favoritedBy User[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  articleId Int
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  authorId  Int
+  author    User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  // Relationships
+  articles Article[]
 }
